@@ -1,12 +1,12 @@
 /* 🎨 1. Variables Globales (Paleta de colores logística/industrial) */
 :root {
-  --primary-color: #1e293b;   /* Azul pizarra oscuro (Elegancia corporativa) */
-  --accent-color: #0284c7;    /* Azul brillante (Botones y enlaces activos) */
-  --bg-color: #f8fafc;        /* Gris ultra claro (Fondo de pantalla limpio) */
-  --card-bg: #ffffff;        /* Blanco puro (Para las tablas y contenedores) */
-  --text-main: #0f172a;      /* Negro carbón (Máxima legibilidad de datos) */
-  --text-muted: #64748b;     /* Gris medio (Para subtítulos y textos secundarios) */
-  --border-color: #e2e8f0;   /* Gris claro para separar celdas y bordes */
+  --primary-color: #1e293b; /* Azul pizarra oscuro (Elegancia corporativa) */
+  --accent-color: #0284c7; /* Azul brillante (Botones y enlaces activos) */
+  --bg-color: #f8fafc; /* Gris ultra claro (Fondo de pantalla limpio) */
+  --card-bg: #ffffff; /* Blanco puro (Para las tablas y contenedores) */
+  --text-main: #0f172a; /* Negro carbón (Máxima legibilidad de datos) */
+  --text-muted: #64748b; /* Gris medio (Para subtítulos y textos secundarios) */
+  --border-color: #e2e8f0; /* Gris claro para separar celdas y bordes */
 }
 
 /* 🧼 2. Reset General (Limpia los márgenes molestos de fábrica de los navegadores) */
@@ -19,7 +19,16 @@
 body {
   background-color: var(--bg-color);
   color: var(--text-main);
-  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    sans-serif;
   padding: 24px;
 }
 
@@ -34,7 +43,7 @@ body {
   border: 1px solid var(--border-color);
   padding: 24px;
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .header-card h1 {
@@ -46,4 +55,178 @@ body {
 .header-card p {
   color: var(--text-muted);
   font-size: 14px;
+}
+
+/* ==========================================================================
+   ESTILOS COMPACTOS INDUSTRIALES PARA SECCIÓN MI PERFIL (OPCIÓN 3)
+   ========================================================================== */
+
+/* Contenedor compacto del perfil */
+.profile-compact-card {
+  max-width: 480px;
+  margin: 16px auto;
+  padding: 16px;
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  font-family: inherit;
+}
+
+/* Cabecera densa */
+.profile-compact-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.profile-compact-title {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+/* Formulario optimizado */
+.form-group-compact {
+  margin-bottom: 10px;
+}
+
+.form-label-compact {
+  display: block;
+  margin-bottom: 3px;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+}
+
+.form-input-compact {
+  width: 100%;
+  padding: 6px 10px;
+  font-size: 13px;
+  color: #334155;
+  background-color: #ffffff;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  box-sizing: border-box;
+  transition:
+    border-color 0.15s ease,
+    box-shadow 0.15s ease;
+}
+
+/* Enfoque industrial azul idéntico a tu botón de Sincronización */
+.form-input-compact:focus {
+  outline: none;
+  border-color: #0284c7;
+  box-shadow: 0 0 0 2px rgba(2, 132, 199, 0.15);
+}
+
+.form-input-compact:disabled {
+  background-color: #f8fafc;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Botones estructurados */
+.btn-compact-secondary {
+  padding: 4px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  background-color: #64748b;
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-compact-secondary:hover {
+  background-color: #475569;
+}
+
+.btn-compact-primary {
+  width: 100%;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  background-color: #0284c7; /* Tu azul corporativo */
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  box-shadow: 0 1px 2px rgba(2, 132, 199, 0.1);
+  transition: background-color 0.15s ease;
+}
+
+.btn-compact-primary:hover {
+  background-color: #0369a1;
+}
+
+.btn-compact-primary:disabled {
+  background-color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Alertas compactas */
+.alert-compact {
+  padding: 8px 12px;
+  border-radius: 4px;
+  margin-bottom: 12px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.alert-compact-success {
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.alert-compact-error {
+  background-color: #fef2f2;
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+/* Zona de peligro industrial */
+.danger-zone-compact {
+  margin-top: 16px;
+  padding: 12px;
+  background-color: #fff1f2;
+  border: 1px solid #ffe4e6;
+  border-radius: 4px;
+}
+
+.danger-zone-title {
+  margin: 0 0 4px 0;
+  font-size: 13px;
+  font-weight: 700;
+  color: #991b1b;
+}
+
+.danger-zone-text {
+  margin: 0 0 10px 0;
+  font-size: 11px;
+  color: #b91c1c;
+}
+
+.btn-compact-danger {
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  background-color: #dc3545; /* Tu rojo de alerta */
+  color: #ffffff;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.15s ease;
+}
+
+.btn-compact-danger:hover {
+  background-color: #b91c1c;
 }
