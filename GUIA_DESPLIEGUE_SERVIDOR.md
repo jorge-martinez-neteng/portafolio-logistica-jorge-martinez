@@ -9,7 +9,7 @@
    .\.venv\Scripts\python.exe -m pip install -r requirements.txt
    ```
 
-3. Copie manualmente el archivo `.env` privado a la raiz del proyecto. No lo agregue a Git. Configure ahi `SIMPLIROUTE_TOKEN` o `SIMPLIROUTE_API_KEY`.
+3. Copie manualmente el archivo `.env` privado a la raiz del proyecto. No lo agregue a Git. Debe contener `SQL_SERVER`, `SQL_DATABASE`, `SQL_USERNAME`, `SQL_PASSWORD` y `SIMPLIROUTE_TOKEN` o `SIMPLIROUTE_API_KEY`.
 4. Instale las dependencias del frontend:
 
    ```powershell

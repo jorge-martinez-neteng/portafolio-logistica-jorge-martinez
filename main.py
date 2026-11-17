@@ -8,6 +8,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
 from passlib.context import CryptContext
+from database_config import get_connection_string, SQL_SERVER, SQL_DATABASE
 
 # 🧠 Motor Criptográfico Global: Traduce los hashes $2b$12 de tu SQL Server
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
@@ -25,11 +26,9 @@ app.add_middleware(
 )
 
 # 🛠️ Parámetros de red hacia la instancia nombrada en tu servidor local
-server = '10.0.0.1\\COMPAC'  
-database = 'BD_Inventario_YGO'
-username = <removed>
-password = <removed>
-connection_string = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=no;TrustServerCertificate=yes;'
+server = SQL_SERVER
+database = SQL_DATABASE
+connection_string = get_connection_string()
 
 # ==========================================================================
 # MODELOS PYDANTIC ACTUALIZADOS CON LA NUEVA MATRIZ DE CATEGORÍAS

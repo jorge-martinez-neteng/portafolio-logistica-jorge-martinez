@@ -1,10 +1,9 @@
 import pyodbc
+from database_config import get_connection_string, SQL_SERVER, SQL_DATABASE
 
-server = '10.0.0.1\\COMPAC'
-database = 'BD_Inventario_YGO'
-username = <removed>
-password = <removed>
-connection_string = f'DRIVER={{ODBC Driver 18 for SQL Server}};SERVER={server};DATABASE={database};UID={username};PWD={password};Encrypt=no;TrustServerCertificate=yes;'
+server = SQL_SERVER
+database = SQL_DATABASE
+connection_string = get_connection_string()
 
 
 try:

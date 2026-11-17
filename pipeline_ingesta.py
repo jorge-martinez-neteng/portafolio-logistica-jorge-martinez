@@ -5,18 +5,10 @@ import pyodbc
 import duckdb
 import pandas as pd
 from datetime import datetime
+from database_config import get_connection_string
 
 # 📡 Parámetros de red exactos hacia tu instancia local SQL Server
-SERVER = '10.0.0.1\\COMPAC'  
-DATABASE = 'BD_Inventario_YGO'
-USERNAME = <removed>
-PASSWORD = <removed>
-CONNECTION_STRING = (
-    f'DRIVER={{ODBC Driver 18 for SQL Server}};'
-    f'SERVER={SERVER};DATABASE={DATABASE};'
-    f'UID={USERNAME};PWD={PASSWORD};'
-    f'Encrypt=no;TrustServerCertificate=yes;'
-)
+CONNECTION_STRING = get_connection_string()
 
 # 📂 Directorio de almacenamiento temporal local
 BRONZE_DIR = "./storage/bronze"

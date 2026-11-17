@@ -3,18 +3,10 @@ import json
 import pyodbc
 import requests
 from datetime import datetime
+from database_config import get_connection_string
 
 # 📡 Conexión exacta a tu instancia de SQL Server 2019 en tu máquina/servidor
-SERVER = '10.0.0.1\\COMPAC'  
-DATABASE = 'BD_Inventario_YGO'
-USERNAME = <removed>
-PASSWORD = <removed>
-CONNECTION_STRING = (
-    f'DRIVER={{ODBC Driver 18 for SQL Server}};'
-    f'SERVER={SERVER};DATABASE={DATABASE};'
-    f'UID={USERNAME};PWD={PASSWORD};'
-    f'Encrypt=no;TrustServerCertificate=yes;'
-)
+CONNECTION_STRING = get_connection_string()
 
 # 🧠 Configuración local del motor de inferencia Ollama
 OLLAMA_ENDPOINT = "http://localhost:11434/api/generate"
