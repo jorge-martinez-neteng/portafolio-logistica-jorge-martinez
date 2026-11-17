@@ -116,8 +116,8 @@ function TransporteDistribucion() {
           <div style="font-family: sans-serif; font-size: 12px; padding: 4px;">
             <strong style="color: #0f172a;">${v.title || "Visita"}</strong><br/>
             <span style="color: #64748b;">📍 ${v.address || "Sin dirección"}</span><br/>
-            <span><strong>Conductor:</strong> ${v.driver || "N/A"}</span><br/>
-            <span><strong>Vehículo:</strong> ${v.vehicle || "N/A"}</span><br/>
+            <span><strong>Conductor:</strong> ${v.driver ? `#${v.driver}` : "N/A"}</span><br/>
+            <span><strong>Vehículo:</strong> ${v.vehicle_name || (v.vehicle ? `#${v.vehicle}` : "N/A")}</span><br/>
             <span><strong>Estado:</strong> <span style="color: ${color}; font-weight: bold;">${status.toUpperCase()}</span></span><br/>
             <span><strong>ETA:</strong> ${v.estimated_time_arrival || "N/A"}</span>
           </div>
@@ -318,7 +318,9 @@ function TransporteDistribucion() {
                       }}
                     >
                       <span>🚛 {v.nombre}</span>
-                      <span style={{ color: v.color }}>{v.progreso}%</span>
+                      <span style={{ color: v.color }}>
+                        {v.estado} · {v.progreso}%
+                      </span>
                     </div>
                     <div
                       style={{
@@ -399,9 +401,17 @@ function TransporteDistribucion() {
                       <span
                         style={{
                           backgroundColor:
-                            vis.status === "completed" ? "#dcfce7" : "#e0f2fe",
+                            vis.status === "completed"
+                              ? "#dcfce7"
+                              : vis.status === "failed"
+                                ? "#fee2e2"
+                                : "#e0f2fe",
                           color:
-                            vis.status === "completed" ? "#166534" : "#0369a1",
+                            vis.status === "completed"
+                              ? "#166534"
+                              : vis.status === "failed"
+                                ? "#991b1b"
+                                : "#0369a1",
                           padding: "2px 6px",
                           borderRadius: "10px",
                           fontSize: "10px",
@@ -471,7 +481,7 @@ function TransporteDistribucion() {
             </div>
           )}
 
-          {/* 
+          {/*
           ======================================================================
           🔒 REGLA CRÍTICA 2: DESPACHADOR DE RUTAS EN LOTE (SOLO LECTURA)
           Comentado todo el bloque del selector y botón de envío para ocultar en la UI
@@ -650,10 +660,11 @@ function TransporteDistribucion() {
                         </span>
                       </td>
                       <td style={{ padding: "10px" }}>
-                        {v.driver || "No asignado"}
+                        {v.driver ? `#${v.driver}` : "No asignado"}
                       </td>
                       <td style={{ padding: "10px" }}>
-                        {v.vehicle || "No asignado"}
+                        {v.vehicle_name ||
+                          (v.vehicle ? `#${v.vehicle}` : "No asignado")}
                       </td>
                       <td style={{ padding: "10px", color: "#64748b" }}>
                         {v.checkout_time ||

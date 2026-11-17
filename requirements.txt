@@ -1,0 +1,9 @@
+fastapi
+uvicorn[standard]
+pyodbc
+requests
+passlib[bcrypt]
+python-dotenv
+duckdb
+pandas
+openpyxl

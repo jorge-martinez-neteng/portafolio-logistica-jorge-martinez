@@ -2,7 +2,8 @@ import os
 import requests
 import pyodbc
 import uuid
-from fastapi import FastAPI, HTTPException, Body, File, UploadFile
+import hmac
+from fastapi import FastAPI, HTTPException, Body, File, UploadFile, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from typing import Optional
@@ -877,7 +878,30 @@ def verificar_sesion_unica(username: str, token_enviado: str) -> bool:
 
 
 @app.post("/api/login")
-def login(request: LoginRequest):
+def login(request: LoginRequest, http_request: Request):
+    # TEMPORAL PRUEBAS - QUITAR EN PRODUCCION
+    test_login_password = os.getenv("YGO_LOCAL_TEST_LOGIN_PASSWORD")
+    if (
+        os.getenv("APP_ENV", "production").lower() == "development"
+        and os.getenv("YGO_LOCAL_TEST_LOGIN_ENABLED", "").lower() == "true"
+        and http_request.client is not None
+        and http_request.client.host in {"127.0.0.1", "::1"}
+        and request.username.strip() == "admin@ygo.com"
+        and test_login_password
+        and hmac.compare_digest(request.password, test_login_password)
+    ):
+        return {
+            "status": "success",
+            "message": "Inicio de sesión exitoso",
+            "usuario": {
+                "id_usuario": "local-test",
+                "username": "admin@ygo.com",
+                "rol": "Administrador",
+                "role": "administrador",
+                "token_sesion": str(uuid.uuid4())
+            }
+        }
+
     try:
         user_enviado = request.username.strip()
         password_plana = request.password
@@ -1127,51 +1151,97 @@ class ActualizarUbicacionPaqueteRequest(BaseModel):
 
 @app.get("/api/dashboard/live-metrics")
 def obtener_metricas_reales_dashboard():
+    from datetime import datetime
+    from conector_simpliroute import obtener_vehiculos_simpliroute, obtener_visitas_simpliroute
+
+    fecha_hoy = datetime.now().strftime("%Y-%m-%d")
+    print(f"📡 [MÉTRICAS LIVE] Sincronizando SimpliRoute para fecha: {fecha_hoy}")
+
+    porcentaje_progreso = 0.0
+    total_visitas = 0
+    visitas_completadas = 0
+    visitas_fallidas = 0
+    visitas_pendientes = 0
+    veh_ruta = 0
+    visitas_simpliroute = []
+    vehiculos_simpliroute = []
+    simpliroute_error = None
+
     try:
-        from datetime import datetime
-        from conector_simpliroute import obtener_visitas_simpliroute
-        fecha_hoy = datetime.now().strftime("%Y-%m-%d")
-        
-        print(f"📡 [MÉTRICAS LIVE] Sincronizando SimpliRoute para fecha: {fecha_hoy}")
-        
-        porcentaje_progreso = 0.0
-        total_visitas = 0
-        visitas_completadas = 0
-        visitas_fallidas = 0
-        visitas_pendientes = 0
-        
-        try:
-            res_visitas = obtener_visitas_simpliroute(fecha_hoy)
-            results = res_visitas.get("results", [])
-            total_visitas = len(results)
-            
-            if total_visitas > 0:
-                for v in results:
-                    st = str(v.get("status", "")).lower()
-                    if st == "completed":
-                        visitas_completadas += 1
-                    elif st == "failed":
-                        visitas_fallidas += 1
-                    else:
-                        visitas_pendientes += 1
-                visitas_gestionadas = visitas_completadas + visitas_fallidas
-                porcentaje_progreso = round((visitas_gestionadas / total_visitas) * 100, 1)
+        res_visitas = obtener_visitas_simpliroute(fecha_hoy)
+        visitas_simpliroute = res_visitas.get("results", [])
+        total_visitas = len(visitas_simpliroute)
+
+        for visita in visitas_simpliroute:
+            estado = str(visita.get("status", "pending")).strip().lower()
+            if estado == "completed":
+                visitas_completadas += 1
+            elif estado == "failed":
+                visitas_fallidas += 1
             else:
-                porcentaje_progreso = 0.0
-        except Exception as err:
-            print(f"❌ Error al consultar SimpliRoute Live Metrics: {str(err)}")
-            porcentaje_progreso = 0.0
-            
+                visitas_pendientes += 1
+
+        if total_visitas:
+            porcentaje_progreso = round((visitas_completadas / total_visitas) * 100, 1)
+    except Exception as err:
+        print(f"❌ Error al consultar visitas de SimpliRoute: {str(err)}")
+        simpliroute_error = str(err)
+
+    try:
+        vehiculos_simpliroute = obtener_vehiculos_simpliroute(fecha_hoy)
+        veh_ruta = sum(
+            1
+            for vehiculo in vehiculos_simpliroute
+            if str(vehiculo.get("status", "")).strip().lower() == "active"
+        )
+    except Exception as err:
+        print(f"❌ Error al consultar vehículos activos de SimpliRoute: {str(err)}")
+        simpliroute_error = str(err) if simpliroute_error is None else f"{simpliroute_error}; {err}"
+
+    # El rendimiento de SimpliRoute respalda la gráfica cuando SQL no aporta filas.
+    rendimiento_simpliroute = []
+    for vehiculo in vehiculos_simpliroute:
+        visitas_vehiculo = [
+            visita for visita in visitas_simpliroute
+            if vehiculo.get("id") is not None
+            and visita.get("vehicle") is not None
+            and str(visita.get("vehicle")).strip() == str(vehiculo.get("id")).strip()
+        ]
+        completadas_vehiculo = sum(
+            1
+            for visita in visitas_vehiculo
+            if str(visita.get("status", "")).strip().lower() == "completed"
+        )
+        total_vehiculo = len(visitas_vehiculo)
+        progreso_vehiculo = round(completadas_vehiculo / total_vehiculo * 100, 1) if total_vehiculo else 0.0
+        rendimiento_simpliroute.append({
+            "operador": vehiculo.get("name") or f"Vehículo #{vehiculo.get('id', '')}",
+            "ordenes": completadas_vehiculo,
+            "visitas_completadas": completadas_vehiculo,
+            "total_visitas": total_vehiculo,
+            "progreso": progreso_vehiculo,
+        })
+
+    veh_taller = 0
+    veh_disponibles = 0
+    comp_libres = 0
+    comp_uso = 0
+    sim_activas = 0
+    proceso_entregas = []
+    paquetes_por_cliente = []
+    rendimiento_operadores = []
+    sql_server_error = None
+    conn = None
+    cursor = None
+
+    try:
         # ==================================================================
         # 🏛️ CONSULTAS A SQL SERVER 2019
         # ==================================================================
         conn = pyodbc.connect(connection_string)
         cursor = conn.cursor()
-        
-        # Flota vehicular
-        res_veh_ruta = cursor.execute("SELECT COUNT(*) FROM dbo.Vehiculo WHERE Status_Vehiculo = 'activo'").fetchone()
-        veh_ruta = res_veh_ruta[0] if res_veh_ruta else 0
 
+        # Flota vehicular adicional desde SQL Server
         res_veh_taller = cursor.execute("SELECT COUNT(*) FROM dbo.Vehiculo WHERE Status_Vehiculo = 'en reparación'").fetchone()
         veh_taller = res_veh_taller[0] if res_veh_taller else 0
 
@@ -1208,31 +1278,39 @@ def obtener_metricas_reales_dashboard():
             ORDER BY total_ordenes DESC
         """).fetchall()
         rendimiento_operadores = [{"operador": str(r[0]).strip(), "ordenes": int(r[1])} for r in rendimiento_ops_rows]
-
-        return {
-            "status": "success",
-            "data": {
-                "primer_intento": porcentaje_progreso,
-                "total_visitas": total_visitas,
-                "visitas_completadas": visitas_completadas,
-                "visitas_fallidas": visitas_fallidas,
-                "visitas_pendientes": visitas_pendientes,
-                "vehiculos_ruta": veh_ruta,
-                "vehiculos_taller": veh_taller,
-                "vehiculos_disponibles": veh_disponibles,
-                "equipos_disponibles": comp_libres,
-                "equipos_en_uso": comp_uso,
-                "lineas_sim_activas": sim_activas,
-                "proceso_entregas": proceso_entregas,
-                "paquetes_por_cliente": paquetes_por_cliente,
-                "rendimiento_operadores": rendimiento_operadores
-            }
-        }
-    except Exception as e:
-        return {"status": "error", "message": f"Fallo crítico en dashboard: {str(e)}"}
+    except Exception as err:
+        sql_server_error = str(err)
+        print(f"❌ Error al consultar SQL Server para métricas: {sql_server_error}")
     finally:
-        if 'cursor' in locals(): cursor.close()
-        if 'conn' in locals(): conn.close()
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+    if not rendimiento_operadores:
+        rendimiento_operadores = rendimiento_simpliroute
+
+    return {
+        "status": "success",
+        "data": {
+            "primer_intento": porcentaje_progreso,
+            "total_visitas": total_visitas,
+            "visitas_completadas": visitas_completadas,
+            "visitas_fallidas": visitas_fallidas,
+            "visitas_pendientes": visitas_pendientes,
+            "simpliroute_error": simpliroute_error,
+            "sql_server_error": sql_server_error,
+            "vehiculos_ruta": veh_ruta,
+            "vehiculos_taller": veh_taller,
+            "vehiculos_disponibles": veh_disponibles,
+            "equipos_disponibles": comp_libres,
+            "equipos_en_uso": comp_uso,
+            "lineas_sim_activas": sim_activas,
+            "proceso_entregas": proceso_entregas,
+            "paquetes_por_cliente": paquetes_por_cliente,
+            "rendimiento_operadores": rendimiento_operadores
+        }
+    }
 
 
 
@@ -1248,9 +1326,22 @@ def obtener_visitas_transporte(fecha: Optional[str] = None, search: Optional[str
     Maneja 404/fechas sin rutas devolviendo count 0 y results vacíos sin datos simulados.
     """
     try:
-        from conector_simpliroute import obtener_visitas_simpliroute
+        from conector_simpliroute import obtener_vehiculos_simpliroute, obtener_visitas_simpliroute
         data = obtener_visitas_simpliroute(fecha)
-        results = data.get("results", [])
+        vehicle_names = {
+            str(vehicle.get("id")).strip(): vehicle.get("name")
+            for vehicle in obtener_vehiculos_simpliroute(fecha)
+            if vehicle.get("id") is not None and vehicle.get("name")
+        }
+        all_results = []
+        for visit in data.get("results", []):
+            mapped_visit = dict(visit)
+            mapped_visit["status"] = str(visit.get("status", "pending")).strip().lower()
+            vehicle_id = visit.get("vehicle")
+            if vehicle_id is not None:
+                mapped_visit["vehicle_name"] = vehicle_names.get(str(vehicle_id).strip())
+            all_results.append(mapped_visit)
+        results = all_results
 
         if search and search.strip():
             st = search.strip().lower()
@@ -1260,6 +1351,7 @@ def obtener_visitas_transporte(fecha: Optional[str] = None, search: Optional[str
                 or st in str(v.get("address", "")).lower()
                 or st in str(v.get("driver", "")).lower()
                 or st in str(v.get("vehicle", "")).lower()
+                or st in str(v.get("vehicle_name", "")).lower()
             ]
 
         total = len(results)
@@ -1274,7 +1366,7 @@ def obtener_visitas_transporte(fecha: Optional[str] = None, search: Optional[str
             "limit": limit,
             "total_pages": (total + limit - 1) // limit if limit > 0 and total > 0 else 1,
             "results": paginated_results,
-            "all_markers": data.get("results", [])
+            "all_markers": all_results
         }
     except Exception as e:
         return {"status": "error", "message": str(e), "count": 0, "results": [], "all_markers": []}
@@ -1293,18 +1385,27 @@ def obtener_vehiculos_transporte(fecha: Optional[str] = None):
         vehiculos_list = []
         if isinstance(vehiculos_raw, list):
             for v in vehiculos_raw:
-                v_name = v.get("name") or v.get("vehicle") or f"Vehículo #{v.get('id', '')}"
-                v_driver = v.get("driver") or "No asignado"
-                
-                v_visitas = [vis for vis in visitas_raw if str(vis.get("vehicle", "")) == str(v_name) or str(vis.get("driver", "")) == str(v_driver)]
+                v_name = v.get("name") or f"Vehículo #{v.get('id', '')}"
+                v_driver = v.get("default_driver") or "No asignado"
+
+                v_visitas = [
+                    vis for vis in visitas_raw
+                    if v.get("id") is not None
+                    and vis.get("vehicle") is not None
+                    and str(vis.get("vehicle")).strip() == str(v.get("id")).strip()
+                ]
                 tot_v = len(v_visitas)
-                comp_v = len([vis for vis in v_visitas if vis.get("status") == "completed"])
+                comp_v = sum(
+                    1 for vis in v_visitas
+                    if str(vis.get("status", "")).strip().lower() == "completed"
+                )
                 progreso = round((comp_v / tot_v * 100), 1) if tot_v > 0 else 0.0
 
                 vehiculos_list.append({
                     "id": v.get("id"),
                     "nombre": v_name,
-                    "conductor": v_driver,
+                    "conductor": f"#{v_driver}" if v_driver != "No asignado" else v_driver,
+                    "estado": str(v.get("status", "unknown")).strip().lower(),
                     "total_visitas": tot_v,
                     "visitas_completadas": comp_v,
                     "progreso": progreso,

@@ -9,6 +9,8 @@ function DashboardInicio() {
     visitas_completadas: 0,
     visitas_fallidas: 0,
     visitas_pendientes: 0,
+    simpliroute_error: null,
+    sql_server_error: null,
     vehiculos_ruta: 0,
     vehiculos_taller: 0,
     vehiculos_disponibles: 0,
@@ -100,6 +102,38 @@ function DashboardInicio() {
           ⚠️ Alerta de Suministro: Pérdida de comunicación local con el Backend
           (Port 8000). Los datos en pantalla reflejan el último estado
           capturado.
+        </div>
+      )}
+      {metricas.simpliroute_error && (
+        <div
+          style={{
+            padding: "10px 14px",
+            backgroundColor: "#fff7ed",
+            color: "#9a3412",
+            borderRadius: "6px",
+            fontSize: "13px",
+            fontWeight: "600",
+            border: "1px solid #fed7aa",
+          }}
+        >
+          ⚠️ No fue posible sincronizar los datos de SimpliRoute:{" "}
+          {metricas.simpliroute_error}
+        </div>
+      )}
+      {metricas.sql_server_error && (
+        <div
+          style={{
+            padding: "10px 14px",
+            backgroundColor: "#fff7ed",
+            color: "#9a3412",
+            borderRadius: "6px",
+            fontSize: "13px",
+            fontWeight: "600",
+            border: "1px solid #fed7aa",
+          }}
+        >
+          ⚠️ SQL Server no está disponible; se muestran las métricas de
+          SimpliRoute cuando corresponde.
         </div>
       )}
 
@@ -210,7 +244,7 @@ function DashboardInicio() {
               marginBottom: "12px",
             }}
           >
-            🚚 Estado de Flota Vehicular (SQL Server)
+            🚚 Estado de Flota Vehicular (SimpliRoute + SQL Server)
           </span>
           <div
             style={{
@@ -232,7 +266,7 @@ function DashboardInicio() {
                   fontWeight: "600",
                 }}
               >
-                En Ruta
+                Activos (SimpliRoute)
               </small>
             </div>
             <div>
@@ -508,7 +542,9 @@ function DashboardInicio() {
                       fontWeight: "700",
                     }}
                   >
-                    {item.ordenes} Órdenes
+                    {item.total_visitas !== undefined
+                      ? `${item.visitas_completadas}/${item.total_visitas} visitas · ${item.progreso}%`
+                      : `${item.ordenes} Órdenes`}
                   </span>
                 </div>
               ))

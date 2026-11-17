@@ -25,14 +25,13 @@ CONNECTION_STRING = (
 )
 
 # ======================================================================
-# 🔑 EXTRACCIÓN SEGURA Y AUTOMATIZADA DE LA API KEY (PASO 4 COMPLETADO)
-# ======================================================================
-# Lee la credencial desde el archivo .env privado. Si no se encuentra, 
-# recurre al modo de respaldo controlado de simulación local.
-SIMPLIROUTE_API_KEY = os.getenv("SIMPLIROUTE_API_KEY", "***REMOVED***")
-SIMPLIROUTE_BASE_URL = "https://simpliroute.com"
+# 🔑 Lee el token desde .env o desde las variables del proceso.
+SIMPLIROUTE_API_KEY = os.getenv("SIMPLIROUTE_TOKEN") or os.getenv("SIMPLIROUTE_API_KEY")
+SIMPLIROUTE_BASE_URL = "https://api.simpliroute.com"
 
 def obtener_headers_simpliroute():
+    if not SIMPLIROUTE_API_KEY:
+        raise RuntimeError("Configura SIMPLIROUTE_TOKEN o SIMPLIROUTE_API_KEY en el entorno.")
     return {
         "Authorization": f"Token {SIMPLIROUTE_API_KEY}",
         "Content-Type": "application/json"
@@ -46,23 +45,17 @@ def obtener_visitas_simpliroute(fecha_str=None):
     if not fecha_str:
         fecha_str = datetime.now().strftime("%Y-%m-%d")
         
-    url = f"{SIMPLIROUTE_BASE_URL}/v1/routes/visits/?created_at={fecha_str}"
+    url = f"{SIMPLIROUTE_BASE_URL}/v1/routes/visits/?planned_date={fecha_str}"
     headers = obtener_headers_simpliroute()
-    
-    try:
-        res = requests.get(url, headers=headers, timeout=8)
-        if res.status_code == 200:
-            data = res.json()
-            if isinstance(data, dict):
-                return data
-            elif isinstance(data, list):
-                return {"count": len(data), "next": None, "previous": None, "results": data}
-        else:
-            print(f"⚠️ [SIMPLIROUTE GET] Status HTTP {res.status_code} para fecha {fecha_str}")
-            return {"count": 0, "next": None, "previous": None, "results": []}
-    except Exception as e:
-        print(f"❌ [SIMPLIROUTE GET] Error: {str(e)}")
-        return {"count": 0, "next": None, "previous": None, "results": []}
+
+    res = requests.get(url, headers=headers, timeout=8)
+    res.raise_for_status()
+    data = res.json()
+    if isinstance(data, dict) and isinstance(data.get("results"), list):
+        return data
+    if isinstance(data, list):
+        return {"count": len(data), "next": None, "previous": None, "results": data}
+    raise ValueError("Respuesta inesperada de SimpliRoute al consultar visitas.")
 
 def obtener_vehiculos_simpliroute(fecha_str=None):
     """
@@ -72,27 +65,16 @@ def obtener_vehiculos_simpliroute(fecha_str=None):
         fecha_str = datetime.now().strftime("%Y-%m-%d")
         
     url_rutas = f"{SIMPLIROUTE_BASE_URL}/v1/routes/vehicles/?planned_date={fecha_str}"
-    url_flota = f"{SIMPLIROUTE_BASE_URL}/v1/fleet/vehicles/"
     headers = obtener_headers_simpliroute()
-    
-    vehiculos = []
-    try:
-        res = requests.get(url_rutas, headers=headers, timeout=8)
-        if res.status_code == 200:
-            data = res.json()
-            if isinstance(data, list):
-                vehiculos = data
-            elif isinstance(data, dict) and "results" in data:
-                vehiculos = data["results"]
-        else:
-            res_flota = requests.get(url_flota, headers=headers, timeout=8)
-            if res_flota.status_code == 200:
-                data_flota = res_flota.json()
-                vehiculos = data_flota if isinstance(data_flota, list) else data_flota.get("results", [])
-    except Exception as e:
-        print(f"❌ [SIMPLIROUTE VEHICULOS] Error: {str(e)}")
-        
-    return vehiculos
+
+    res = requests.get(url_rutas, headers=headers, timeout=8)
+    res.raise_for_status()
+    data = res.json()
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict) and isinstance(data.get("results"), list):
+        return data["results"]
+    raise ValueError("Respuesta inesperada de SimpliRoute al consultar vehículos.")
 
 def obtener_eventos_simpliroute(fecha_str=None):
     """
@@ -103,7 +85,7 @@ def obtener_eventos_simpliroute(fecha_str=None):
     
     eventos = []
     for v in visitas:
-        status = v.get("status", "pending")
+        status = str(v.get("status", "pending")).strip().lower()
         if status in ["completed", "failed"]:
             eventos.append({
                 "id": v.get("id"),
