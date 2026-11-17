@@ -170,7 +170,7 @@ def sincronizar_zona_con_simpliroute(id_zona_logistica):
                 status_codigo = 201
                 response_json = {"id": 88888, "status": "simulated_success_local"}
             else:
-                response = requests.post(SIMPLIROUTE_URL, data=json.dumps(payload_visita), headers=headers, timeout=12)
+                response = requests.post(SIMPLIROUTE_BASE_URL, data=json.dumps(payload_visita), headers=headers, timeout=12)
                 status_codigo = response.status_code
                 response_json = response.json() if status_codigo == 201 else {}
 

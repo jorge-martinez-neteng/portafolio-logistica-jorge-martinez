@@ -190,10 +190,10 @@ function DashboardInicio() {
           </div>
         </div>
 
-        {/* GRÁFICO 2: INDICADORES EN TIEMPO REAL DE FLOTA Y TI */}
+        {/* GRÁFICO 2: FLOTA VEHICULAR */}
         <div
           style={{
-            flex: "1 1 320px",
+            flex: "1 1 280px",
             backgroundColor: "#ffffff",
             padding: "16px",
             borderRadius: "6px",
@@ -205,182 +205,319 @@ function DashboardInicio() {
               display: "block",
               fontSize: "11px",
               fontWeight: "700",
-              color: "#475569",
+              color: "#64748b",
               textTransform: "uppercase",
-              letterSpacing: "0.5px",
               marginBottom: "12px",
             }}
           >
-            🚐 Estado de Infraestructura y Flota Vehicular
+            🚚 Estado de Flota Vehicular (SQL Server)
           </span>
           <div
             style={{
               display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-              fontSize: "13px",
-            }}
-          >
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "4px",
-                  fontWeight: "600",
-                }}
-              >
-                <span style={{ color: "#334155" }}>
-                  Unidades Activas (En Ruta)
-                </span>
-                <span style={{ color: "#166534", fontWeight: "700" }}>
-                  {metricas.vehiculos_ruta} Unidades
-                </span>
-              </div>
-              <div
-                style={{
-                  width: "100%",
-                  height: "8px",
-                  backgroundColor: "#f1f5f9",
-                  borderRadius: "4px",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.min((metricas.vehiculos_ruta || 0) * 8, 100)}%`,
-                    height: "100%",
-                    backgroundColor: "#28a745",
-                    borderRadius: "4px",
-                  }}
-                ></div>
-              </div>
-            </div>
-
-            <div>
-              <div
-                style={{
-                  display: "flex",
-                  justifyContent: "space-between",
-                  marginBottom: "4px",
-                  fontWeight: "600",
-                }}
-              >
-                <span style={{ color: "#334155" }}>
-                  Unidades Fuera de Servicio (Taller)
-                </span>
-                <span style={{ color: "#1e40af", fontWeight: "700" }}>
-                  {metricas.vehiculos_taller} Unidades
-                </span>
-              </div>
-              <div
-                style={{
-                  width: "100%",
-                  height: "8px",
-                  backgroundColor: "#f1f5f9",
-                  borderRadius: "4px",
-                }}
-              >
-                <div
-                  style={{
-                    width: `${Math.min((metricas.vehiculos_taller || 0) * 8, 100)}%`,
-                    height: "100%",
-                    backgroundColor: "#0284c7",
-                    borderRadius: "4px",
-                  }}
-                ></div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* GRÁFICO 3: ACTIVOS DE TI PATRIMONIALES (CONECTADO A TU VALOR REAL) */}
-        <div
-          style={{
-            flex: "1 1 240px",
-            backgroundColor: "#ffffff",
-            padding: "16px",
-            borderRadius: "6px",
-            border: "1px solid #e2e8f0",
-          }}
-        >
-          <span
-            style={{
-              display: "block",
-              fontSize: "11px",
-              fontWeight: "700",
-              color: "#475569",
-              textTransform: "uppercase",
-              letterSpacing: "0.5px",
-              marginBottom: "12px",
-            }}
-          >
-            💻 Inventario de Cómputo e TI
-          </span>
-          <div
-            style={{
-              display: "flex",
-              gap: "12px",
-              alignItems: "center",
               justifyContent: "space-around",
-              marginTop: "14px",
+              textAlign: "center",
             }}
           >
-            <div style={{ textAlign: "center" }}>
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "28px",
-                  fontWeight: "800",
-                  color: "#166534",
-                }}
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#28a745", display: "block" }}
               >
-                {metricas.equipos_disponibles}
-              </span>
+                {metricas.vehiculos_ruta || 0}
+              </strong>
               <small
                 style={{
-                  fontSize: "10px",
-                  fontWeight: "700",
-                  color: "#64748b",
-                  textTransform: "uppercase",
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
+                }}
+              >
+                En Ruta
+              </small>
+            </div>
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#dc3545", display: "block" }}
+              >
+                {metricas.vehiculos_taller || 0}
+              </strong>
+              <small
+                style={{
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
+                }}
+              >
+                En Taller
+              </small>
+            </div>
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#0284c7", display: "block" }}
+              >
+                {metricas.vehiculos_disponibles || 0}
+              </strong>
+              <small
+                style={{
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
                 }}
               >
                 Disponibles
               </small>
             </div>
-            <div
-              style={{
-                width: "1px",
-                height: "42px",
-                backgroundColor: "#cbd5e1",
-              }}
-            ></div>
-            <div style={{ textAlign: "center" }}>
-              <span
-                style={{
-                  display: "block",
-                  fontSize: "28px",
-                  fontWeight: "800",
-                  color: "#0284c7",
-                }}
+          </div>
+        </div>
+
+        {/* GRÁFICO 3: INVENTARIO DE TI */}
+        <div
+          style={{
+            flex: "1 1 280px",
+            backgroundColor: "#ffffff",
+            padding: "16px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <span
+            style={{
+              display: "block",
+              fontSize: "11px",
+              fontWeight: "700",
+              color: "#64748b",
+              textTransform: "uppercase",
+              marginBottom: "12px",
+            }}
+          >
+            💻 Inventario TI & Dispositivos (SQL Server)
+          </span>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "space-around",
+              textAlign: "center",
+            }}
+          >
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#0284c7", display: "block" }}
               >
-                {metricas.equipos_en_uso}
-              </span>
+                {metricas.equipos_disponibles || 0}
+              </strong>
               <small
                 style={{
-                  fontSize: "10px",
-                  fontWeight: "700",
-                  color: "#64748b",
-                  textTransform: "uppercase",
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
                 }}
               >
-                Asignados
+                Libres
+              </small>
+            </div>
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#16a34a", display: "block" }}
+              >
+                {metricas.equipos_en_uso || 0}
+              </strong>
+              <small
+                style={{
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
+                }}
+              >
+                En Uso
+              </small>
+            </div>
+            <div>
+              <strong
+                style={{ fontSize: "22px", color: "#9333ea", display: "block" }}
+              >
+                {metricas.lineas_sim_activas || 0}
+              </strong>
+              <small
+                style={{
+                  fontSize: "11px",
+                  color: "#475569",
+                  fontWeight: "600",
+                }}
+              >
+                SIM / Cel
               </small>
             </div>
           </div>
         </div>
       </div>
 
-      {/* GRÁFICO 4: BARRAS DINÁMICAS (AVANCE DE SURTIDO EN LA BODEGA CENTRAL) */}
+      {/* SECCIÓN POWER BI: GRÁFICAS E INFORMES DE ANALÍTICA DESDE SQL SERVER */}
+      <div style={{ display: "flex", gap: "16px", flexWrap: "wrap" }}>
+        {/* POWER BI CHART 1: PAQUETES POR CLIENTE */}
+        <div
+          style={{
+            flex: "1 1 450px",
+            backgroundColor: "#ffffff",
+            padding: "16px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <h4
+            style={{
+              margin: "0 0 14px 0",
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "#1e293b",
+              textTransform: "uppercase",
+            }}
+          >
+            📊 Suma de Paquetes por Cliente (Power BI Datamart SQL Server)
+          </h4>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            {!metricas.paquetes_por_cliente ||
+            metricas.paquetes_por_cliente.length === 0 ? (
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#94a3b8",
+                  fontStyle: "italic",
+                  margin: 0,
+                }}
+              >
+                Sin registros de paquetes por cliente en SQL Server.
+              </p>
+            ) : (
+              metricas.paquetes_por_cliente.map((item, idx) => {
+                const maxPkt = Math.max(
+                  ...metricas.paquetes_por_cliente.map((p) => p.paquetes),
+                  1,
+                );
+                const pct = Math.min((item.paquetes / maxPkt) * 100, 100);
+                return (
+                  <div
+                    key={idx}
+                    style={{
+                      display: "flex",
+                      flexDirection: "column",
+                      gap: "3px",
+                    }}
+                  >
+                    <div
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        fontSize: "12px",
+                        fontWeight: "600",
+                        color: "#334155",
+                      }}
+                    >
+                      <span>🏢 {item.cliente}</span>
+                      <strong style={{ color: "#0284c7" }}>
+                        {item.paquetes} pkts
+                      </strong>
+                    </div>
+                    <div
+                      style={{
+                        width: "100%",
+                        height: "10px",
+                        backgroundColor: "#f1f5f9",
+                        borderRadius: "4px",
+                        overflow: "hidden",
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${pct}%`,
+                          height: "100%",
+                          backgroundColor: "#3b82f6",
+                          borderRadius: "4px",
+                          transition: "width 0.5s ease",
+                        }}
+                      ></div>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+        </div>
+
+        {/* POWER BI CHART 2: RENDIMIENTO POR OPERADOR */}
+        <div
+          style={{
+            flex: "1 1 450px",
+            backgroundColor: "#ffffff",
+            padding: "16px",
+            borderRadius: "6px",
+            border: "1px solid #e2e8f0",
+          }}
+        >
+          <h4
+            style={{
+              margin: "0 0 14px 0",
+              fontSize: "13px",
+              fontWeight: "700",
+              color: "#1e293b",
+              textTransform: "uppercase",
+            }}
+          >
+            👷 Rendimiento por Operador / Destinatario (SQL Server)
+          </h4>
+          <div
+            style={{ display: "flex", flexDirection: "column", gap: "10px" }}
+          >
+            {!metricas.rendimiento_operadores ||
+            metricas.rendimiento_operadores.length === 0 ? (
+              <p
+                style={{
+                  fontSize: "12px",
+                  color: "#94a3b8",
+                  fontStyle: "italic",
+                  margin: 0,
+                }}
+              >
+                Sin registros de operadores en SQL Server.
+              </p>
+            ) : (
+              metricas.rendimiento_operadores.map((item, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    padding: "8px 12px",
+                    backgroundColor: "#f8fafc",
+                    borderRadius: "4px",
+                    border: "1px solid #e2e8f0",
+                    fontSize: "12px",
+                  }}
+                >
+                  <span style={{ fontWeight: "600", color: "#1e293b" }}>
+                    👤 {item.operador}
+                  </span>
+                  <span
+                    style={{
+                      backgroundColor: "#e0f2fe",
+                      color: "#0369a1",
+                      padding: "3px 8px",
+                      borderRadius: "12px",
+                      fontWeight: "700",
+                    }}
+                  >
+                    {item.ordenes} Órdenes
+                  </span>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* ESTADO DE CARGA Y SURTIDO LOGÍSTICO */}
       <div
         style={{
           backgroundColor: "#ffffff",
@@ -396,10 +533,9 @@ function DashboardInicio() {
             fontWeight: "700",
             color: "#1e293b",
             textTransform: "uppercase",
-            letterSpacing: "0.5px",
           }}
         >
-          📋 Estado de Carga y Surtido de Órdenes Delivery (SQL Server Real)
+          📋 Recuento de Órdenes por Estado Logístico (SQL Server Real)
         </h4>
         <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
           {!metricas.proceso_entregas ||
@@ -435,7 +571,7 @@ function DashboardInicio() {
                   }}
                 >
                   <span>
-                    📦 Estatus Logístico Base:{" "}
+                    📦 Estatus Logístico:{" "}
                     <strong style={{ color: "#0284c7" }}>{item.estado}</strong>
                   </span>
                   <span>{item.cantidad} Guías unificadas</span>
@@ -452,7 +588,7 @@ function DashboardInicio() {
                 >
                   <div
                     style={{
-                      width: `${Math.min(item.cantidad * 6, 100)}%`,
+                      width: `${Math.min(item.cantidad * 8, 100)}%`,
                       height: "100%",
                       backgroundColor:
                         item.estado === "En Ruta"
