@@ -20,7 +20,7 @@ app = FastAPI(title="API Logistica Central YGO - Jorge Martinez")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],  # Permite que cualquier terminal de tu red local se conecte a la API
-    allow_credentials=True,
+    allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -1229,6 +1229,7 @@ def obtener_metricas_reales_dashboard():
     proceso_entregas = []
     paquetes_por_cliente = []
     rendimiento_operadores = []
+    sql_server_disponible = False
     sql_server_error = None
     conn = None
     cursor = None
@@ -1238,6 +1239,7 @@ def obtener_metricas_reales_dashboard():
         # 🏛️ CONSULTAS A SQL SERVER 2019
         # ==================================================================
         conn = pyodbc.connect(connection_string)
+        sql_server_disponible = True
         cursor = conn.cursor()
 
         # Flota vehicular adicional desde SQL Server
@@ -1298,6 +1300,7 @@ def obtener_metricas_reales_dashboard():
             "visitas_fallidas": visitas_fallidas,
             "visitas_pendientes": visitas_pendientes,
             "simpliroute_error": simpliroute_error,
+            "sql_server_disponible": sql_server_disponible,
             "sql_server_error": sql_server_error,
             "vehiculos_ruta": veh_ruta,
             "vehiculos_taller": veh_taller,

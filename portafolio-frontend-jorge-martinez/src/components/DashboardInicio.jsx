@@ -10,6 +10,7 @@ function DashboardInicio() {
     visitas_fallidas: 0,
     visitas_pendientes: 0,
     simpliroute_error: null,
+    sql_server_disponible: false,
     sql_server_error: null,
     vehiculos_ruta: 0,
     vehiculos_taller: 0,
@@ -120,7 +121,7 @@ function DashboardInicio() {
           {metricas.simpliroute_error}
         </div>
       )}
-      {metricas.sql_server_error && (
+      {metricas.sql_server_disponible === false && (
         <div
           style={{
             padding: "10px 14px",
@@ -134,6 +135,22 @@ function DashboardInicio() {
         >
           ⚠️ SQL Server no está disponible; se muestran las métricas de
           SimpliRoute cuando corresponde.
+        </div>
+      )}
+      {metricas.sql_server_disponible && metricas.sql_server_error && (
+        <div
+          style={{
+            padding: "10px 14px",
+            backgroundColor: "#fff7ed",
+            color: "#9a3412",
+            borderRadius: "6px",
+            fontSize: "13px",
+            fontWeight: "600",
+            border: "1px solid #fed7aa",
+          }}
+        >
+          ⚠️ SQL Server está conectado, pero no se pudieron cargar todas las
+          métricas: {metricas.sql_server_error}
         </div>
       )}
 
