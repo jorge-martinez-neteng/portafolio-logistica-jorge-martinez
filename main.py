@@ -1257,7 +1257,12 @@ def obtener_metricas_reales_dashboard():
         comp_uso = res_comp_uso[0] if res_comp_uso else 0
 
         # Tarjetas SIM / Móviles
-        res_sim_activas = cursor.execute("SELECT COUNT(*) FROM dbo.LINEAS_SIM WHERE ID_Celular IS NOT NULL OR Estatus = 'Activa'").fetchone()
+        res_sim_activas = cursor.execute("""
+            SELECT COUNT(DISTINCT S.ID_SIM)
+            FROM dbo.SIM S
+            LEFT JOIN dbo.Celular C ON C.ID_SIM = S.ID_SIM
+            WHERE C.ID_Celular IS NOT NULL OR S.Estatus_Sim = 'Activo'
+        """).fetchone()
         sim_activas = res_sim_activas[0] if res_sim_activas else 0
 
         # Proceso Entregas y Power BI Metrics
