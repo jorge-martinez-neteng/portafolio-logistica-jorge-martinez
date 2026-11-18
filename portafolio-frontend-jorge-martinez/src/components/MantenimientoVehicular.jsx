@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function MantenimientoVehicular({ usuarioActual }) {
   const esMecanico =
@@ -21,7 +22,7 @@ function MantenimientoVehicular({ usuarioActual }) {
   const cargarFlotaReal = async () => {
     setLoading(true);
     try {
-      const response = await fetch("http://localhost:8000/api/equipos");
+      const response = await fetch(`${API_BASE_URL}/api/equipos`);
       const resultado = await response.json();
       if (resultado.status === "success") {
         const soloVehiculos = (resultado.data || []).filter(
@@ -49,7 +50,7 @@ function MantenimientoVehicular({ usuarioActual }) {
     setMensaje("");
     try {
       const response = await fetch(
-        "http://localhost:8000/api/equipos/asignar",
+        `${API_BASE_URL}/api/equipos/asignar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -82,7 +83,7 @@ function MantenimientoVehicular({ usuarioActual }) {
   const handleCambiarEstatusFlota = async (idVehiculo, nuevoEstatus) => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/equipos/asignar",
+        `${API_BASE_URL}/api/equipos/asignar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

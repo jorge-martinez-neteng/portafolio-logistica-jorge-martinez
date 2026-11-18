@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 import { authService } from "../services/authService";
 
 function RegistroUsuario({ onVolver, usuarioActual }) {
@@ -24,7 +25,7 @@ function RegistroUsuario({ onVolver, usuarioActual }) {
         ? encodeURIComponent(usuarioActual.username)
         : "admin";
       const response = await fetch(
-        `http://localhost:8000/api/usuarios-activos?username_gerente=${userGerente}`,
+        `${API_BASE_URL}/api/usuarios-activos?username_gerente=${userGerente}`,
       );
       const resultado = await response.json();
       if (resultado.status === "success") {
@@ -38,7 +39,7 @@ function RegistroUsuario({ onVolver, usuarioActual }) {
   // 🟢 NUEVA FUNCIÓN SENIOR: EXTRAER PERSONAL REAL DESDE SQL SERVER
   const cargarCatalogoEmpleados = async () => {
     try {
-      const response = await fetch("http://localhost:8000/api/empleados-lista");
+      const response = await fetch(`${API_BASE_URL}/api/empleados-lista`);
       const resultado = await response.json();
       if (resultado.status === "success") {
         setCatalogoEmpleados(resultado.data || []);
@@ -123,7 +124,7 @@ function RegistroUsuario({ onVolver, usuarioActual }) {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/eliminar-usuario",
+        `${API_BASE_URL}/api/eliminar-usuario`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

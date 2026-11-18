@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
   // CONTROL DE VISIBILIDAD DE INTERFAZ Y PESTAÑAS
@@ -150,11 +151,11 @@ function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
   // 🛡️ SINCRONIZACIÓN CORREGIDA CONTRA ARREGLOS ANIDADOS DEL BACKEND
   const sincronizarCatalogosMesaControl = async () => {
     try {
-      const resEmp = await fetch("http://localhost:8000/api/empleados-lista");
+      const resEmp = await fetch(`${API_BASE_URL}/api/empleados-lista`);
       const dataEmp = await resEmp.json();
       if (dataEmp.status === "success") setEmpleados(dataEmp.data || []);
 
-      const resSim = await fetch("http://localhost:8000/api/sims-lista");
+      const resSim = await fetch(`${API_BASE_URL}/api/sims-lista`);
       const dataSim = await resSim.json();
 
       // Interceptamos si viene anidado en data o directo como arreglo
@@ -281,7 +282,7 @@ function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
       : "Colaborador YGO";
 
     try {
-      const response = await fetch("http://localhost:8000/api/equipos/nuevo", {
+      const response = await fetch(`${API_BASE_URL}/api/equipos/nuevo`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -401,7 +402,7 @@ function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
       else if (idEquipoAccion.startsWith("M")) tablaOrigenBackend = "Celular";
 
       const response = await fetch(
-        "http://localhost:8000/api/equipos/eliminar",
+        `${API_BASE_URL}/api/equipos/eliminar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -437,7 +438,7 @@ function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/sims/actualizar-estatus",
+        `${API_BASE_URL}/api/sims/actualizar-estatus`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -461,7 +462,7 @@ function FormulariosInventario({ datosReales = [], onOperacionExitosa }) {
 
   const handleReasignarLineaTelefonica = async (idSim, idCelularNuevo) => {
     try {
-      const response = await fetch("http://localhost:8000/api/sims/reasignar", {
+      const response = await fetch(`${API_BASE_URL}/api/sims/reasignar`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

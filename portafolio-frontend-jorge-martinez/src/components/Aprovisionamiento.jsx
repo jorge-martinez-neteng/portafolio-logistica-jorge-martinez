@@ -1,5 +1,6 @@
 // Aprovisionamiento.jsx
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function Aprovisionamiento() {
   const [archivoSeleccionado, setArchivoSeleccionado] = useState(null);
@@ -11,7 +12,7 @@ function Aprovisionamiento() {
   const cargarBitacoraHoy = async () => {
     try {
       const response = await fetch(
-        "http://localhost:8000/api/bodega/ordenes-pendientes",
+        `${API_BASE_URL}/api/bodega/ordenes-pendientes`,
       );
       const resultado = await response.json();
       if (resultado.status === "success") {
@@ -51,7 +52,7 @@ function Aprovisionamiento() {
     try {
       // Endpoint que crearemos en FastAPI para recibir el archivo físico mutable
       const response = await fetch(
-        "http://localhost:8000/api/v1/ingesta/upload",
+        `${API_BASE_URL}/api/v1/ingesta/upload`,
         {
           method: "POST",
           body: formData,

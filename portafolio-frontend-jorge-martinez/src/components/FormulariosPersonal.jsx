@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function FormulariosPersonal({ onOperacionExitosa }) {
   // CONTROL DE VISIBILIDAD DE LA CONSOLA DE RECURSOS HUMANOS
@@ -44,14 +45,14 @@ function FormulariosPersonal({ onOperacionExitosa }) {
     try {
       // A. Cargar catálogo general de operadores activos para bajas
       const resEmp = await fetch(
-        "http://localhost:8000/api/empleados-lista-completa",
+        `${API_BASE_URL}/api/empleados-lista-completa`,
       );
       const dataEmp = await resEmp.json();
       if (dataEmp.status === "success") setEmpleados(dataEmp.data || []);
 
       // B. Casilla Cómputo aislada (Solo disponibles y operativos)
       const resComp = await fetch(
-        "http://localhost:8000/api/computo-disponibles",
+        `${API_BASE_URL}/api/computo-disponibles`,
       );
       const dataComp = await resComp.json();
       if (dataComp.status === "success")
@@ -59,7 +60,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
 
       // C. Casilla Celulares aislada (Solo disponibles, IMEI activo y no robados)
       const resCel = await fetch(
-        "http://localhost:8000/api/celulares-disponibles",
+        `${API_BASE_URL}/api/celulares-disponibles`,
       );
       const dataCel = await resCel.json();
       if (dataCel.status === "success")
@@ -67,7 +68,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
 
       // D. Casilla Vehículos aislada (Solo disponibles y operativos en almacén)
       const resVeh = await fetch(
-        "http://localhost:8000/api/vehiculos-disponibles",
+        `${API_BASE_URL}/api/vehiculos-disponibles`,
       );
       const dataVeh = await resVeh.json();
       if (dataVeh.status === "success")
@@ -186,7 +187,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/empleados/nuevo",
+        `${API_BASE_URL}/api/empleados/nuevo`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -278,7 +279,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/empleados/eliminar",
+        `${API_BASE_URL}/api/empleados/eliminar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -319,7 +320,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
     setMensaje({ texto: "", tipo: "" });
     try {
       const response = await fetch(
-        "http://localhost:8000/api/recursos-humanos/reporte-maestro",
+        `${API_BASE_URL}/api/recursos-humanos/reporte-maestro`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -413,7 +414,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/recursos-humanos/evaluar",
+        `${API_BASE_URL}/api/recursos-humanos/evaluar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -445,7 +446,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/recursos-humanos/reporte-empleados-completo",
+        `${API_BASE_URL}/api/recursos-humanos/reporte-empleados-completo`,
       );
       const data = await response.json();
       if (!response.ok || data.status === "error")
@@ -1057,7 +1058,7 @@ function FormulariosPersonal({ onOperacionExitosa }) {
 
                         try {
                           const response = await fetch(
-                            "http://localhost:8000/api/empleados/renovar-contrato",
+                            `${API_BASE_URL}/api/empleados/renovar-contrato`,
                             {
                               method: "POST",
                               headers: { "Content-Type": "application/json" },

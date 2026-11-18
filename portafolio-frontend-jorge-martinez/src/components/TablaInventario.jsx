@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function TablaInventario({ datosReales, onAsignacionCambiada }) {
   const [empleados, setEmpleados] = useState([]);
@@ -8,7 +9,7 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
     const cargarEmpleados = async () => {
       try {
         const response = await fetch(
-          "http://localhost:8000/api/empleados-lista",
+          `${API_BASE_URL}/api/empleados-lista`,
         );
         const resultado = await response.json();
         if (resultado.status === "success") {
@@ -28,7 +29,7 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
     setProcesandoId(idEquipo);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/equipos/asignar",
+        `${API_BASE_URL}/api/equipos/asignar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -71,7 +72,7 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
     setProcesandoId(idEquipo);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/equipos/asignar",
+        `${API_BASE_URL}/api/equipos/asignar`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

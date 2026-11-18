@@ -1,5 +1,6 @@
 // GestionAlmacen.jsx
 import { useState, useEffect } from "react";
+import { API_BASE_URL } from "../config/api";
 
 function GestionAlmacen() {
   const [inventarioAlmacen, setInventarioAlmacen] = useState([]);
@@ -15,7 +16,7 @@ function GestionAlmacen() {
     setLoading(true);
     try {
       const response = await fetch(
-        "http://localhost:8000/api/bodega/ordenes-pendientes",
+        `${API_BASE_URL}/api/bodega/ordenes-pendientes`,
       );
       const resultado = await response.json();
 
@@ -57,7 +58,7 @@ function GestionAlmacen() {
 
     try {
       const response = await fetch(
-        "http://localhost:8000/api/bodega/actualizar-estado",
+        `${API_BASE_URL}/api/bodega/actualizar-estado`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

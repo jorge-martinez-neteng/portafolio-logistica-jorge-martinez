@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { API_BASE_URL } from "./config/api";
 import TablaInventario from "./components/TablaInventario";
 import Login from "./components/Login";
 import RegistroUsuario from "./components/RegistroUsuario";
@@ -61,7 +62,7 @@ function App() {
 
       // 2. Pasamos los parámetros en la URL tal como los configuramos en las rutas de Python
       const respuesta = await fetch(
-        `http://localhost:8000/api/equipos?username=${userParam}&token_sesion=${tokenParam}`,
+        `${API_BASE_URL}/api/equipos?username=${userParam}&token_sesion=${tokenParam}`,
       );
 
       // 3. CAPTURA SENIOR: Si el backend responde 401, significa que otra computadora inició sesión con esta cuenta

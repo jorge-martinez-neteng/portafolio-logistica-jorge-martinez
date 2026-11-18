@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_BASE_URL } from "../config/api";
 import { authService } from "../services/authService"; // Importación segura de nuestro servicio
 
 function Login({ onLoginSuccess }) {
@@ -16,7 +17,7 @@ function Login({ onLoginSuccess }) {
 
     try {
       // ENVIAR CREDENCIALES DIRECTAS Y EN TEXTO PLANO AL BACKEND
-      const response = await fetch("http://localhost:8000/api/login", {
+      const response = await fetch(`${API_BASE_URL}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
