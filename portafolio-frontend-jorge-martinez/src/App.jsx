@@ -15,6 +15,7 @@ import FormulariosPersonal from "./components/FormulariosPersonal";
 
 function App() {
   const [sincronizando, setSincronizando] = useState(false);
+  const [descargandoInventario, setDescargandoInventario] = useState(false);
   const [mensajeEstado, setMensajeEstado] = useState(
     "Conexión de forma remota Servidor local\\YGO.",
   );
@@ -96,6 +97,63 @@ function App() {
       );
     } finally {
       setSincronizando(false);
+    }
+  };
+
+  const handleDescargarInventario = async () => {
+    setDescargandoInventario(true);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/inventario/completo`);
+      const resultado = await response.json();
+      if (!response.ok || resultado.status !== "success") {
+        throw new Error(
+          resultado.detail ||
+            resultado.message ||
+            "No se pudo consultar el inventario.",
+        );
+      }
+
+      const registros = resultado.data;
+      if (!Array.isArray(registros) || registros.length === 0) {
+        throw new Error("No hay activos disponibles para descargar.");
+      }
+
+      const columnas = [
+        ...new Set(registros.flatMap((registro) => Object.keys(registro))),
+      ];
+      const convertirCeldaCsv = (valor) => {
+        const texto =
+          valor === null || valor === undefined
+            ? ""
+            : typeof valor === "object"
+              ? JSON.stringify(valor)
+              : String(valor);
+        return `"${texto.replace(/"/g, '""')}"`;
+      };
+      const filasCsv = [
+        columnas,
+        ...registros.map((registro) =>
+          columnas.map((columna) => registro[columna]),
+        ),
+      ];
+      const contenidoCsv = `\uFEFF${filasCsv
+        .map((fila) => fila.map(convertirCeldaCsv).join(","))
+        .join("\r\n")}`;
+      const archivo = new Blob([contenidoCsv], {
+        type: "text/csv;charset=utf-8;",
+      });
+      const url = URL.createObjectURL(archivo);
+      const enlace = document.createElement("a");
+      enlace.href = url;
+      enlace.download = `inventario_completo_${new Date().toISOString().slice(0, 10)}.csv`;
+      document.body.appendChild(enlace);
+      enlace.click();
+      enlace.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 0);
+    } catch (error) {
+      alert(`⚠️ Error al descargar el inventario: ${error.message}`);
+    } finally {
+      setDescargandoInventario(false);
     }
   };
 
@@ -383,30 +441,60 @@ function App() {
                 {mensajeEstado}
               </p>
 
-              <button
-                onClick={manejarSincronizacion}
-                disabled={sincronizando}
+              <div
                 style={{
+                  display: "flex",
+                  justifyContent: "flex-end",
+                  gap: "10px",
+                  flexWrap: "wrap",
                   marginTop: "16px",
                   marginBottom: "16px",
-                  backgroundColor: sincronizando
-                    ? "#94a3b8"
-                    : "var(--accent-color)",
-                  color: "#ffffff",
-                  border: "none",
-                  padding: "10px 18px",
-                  borderRadius: "6px",
-                  fontSize: "14px",
-                  fontWeight: "bold",
-                  cursor: sincronizando ? "not-allowed" : "pointer",
-                  transition: "background-color 0.2s ease",
-                  boxShadow: "0 2px 4px rgba(2, 132, 199, 0.2)",
                 }}
               >
-                {sincronizando
-                  ? "Consultando Servidor..."
-                  : "Forzar Sincronización con Servidor"}
-              </button>
+                <button
+                  type="button"
+                  onClick={handleDescargarInventario}
+                  disabled={descargandoInventario}
+                  style={{
+                    backgroundColor: descargandoInventario
+                      ? "#6ee7b7"
+                      : "#059669",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    cursor: descargandoInventario ? "wait" : "pointer",
+                  }}
+                >
+                  {descargandoInventario
+                    ? "Preparando descarga..."
+                    : "⬇ Descargar Inventario"}
+                </button>
+                <button
+                  onClick={manejarSincronizacion}
+                  disabled={sincronizando}
+                  style={{
+                    backgroundColor: sincronizando
+                      ? "#94a3b8"
+                      : "var(--accent-color)",
+                    color: "#ffffff",
+                    border: "none",
+                    padding: "10px 18px",
+                    borderRadius: "6px",
+                    fontSize: "14px",
+                    fontWeight: "bold",
+                    cursor: sincronizando ? "not-allowed" : "pointer",
+                    transition: "background-color 0.2s ease",
+                    boxShadow: "0 2px 4px rgba(2, 132, 199, 0.2)",
+                  }}
+                >
+                  {sincronizando
+                    ? "Consultando Servidor..."
+                    : "Forzar Sincronización con Servidor"}
+                </button>
+              </div>
 
               <TablaInventario
                 datosReales={datosServidor}

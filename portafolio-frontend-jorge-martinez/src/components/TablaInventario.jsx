@@ -1,6 +1,48 @@
 import { useState, useEffect } from "react";
 import { API_BASE_URL } from "../config/api";
 
+const OPCIONES_ESTATUS = [
+  "DISPONIBLE",
+  "ASIGNADO",
+  "INACTIVO",
+  "EN MANTENIMIENTO / REPARACIÓN",
+  "DAÑADO",
+  "EXTRAVIADO",
+  "DAR DE BAJA",
+];
+
+const ESTILOS_ESTATUS = {
+  DISPONIBLE: { backgroundColor: "#dcfce7", color: "#166534" },
+  ASIGNADO: { backgroundColor: "#dbeafe", color: "#1d4ed8" },
+  INACTIVO: { backgroundColor: "#e5e7eb", color: "#4b5563" },
+  "EN MANTENIMIENTO / REPARACIÓN": {
+    backgroundColor: "#ffedd5",
+    color: "#c2410c",
+  },
+  DAÑADO: { backgroundColor: "#fee2e2", color: "#b91c1c" },
+  EXTRAVIADO: { backgroundColor: "#ede9fe", color: "#5b21b6" },
+  "DAR DE BAJA": { backgroundColor: "#b91c1c", color: "#ffffff" },
+};
+
+function obtenerEstatusSelector(estatus, tieneAsignacion) {
+  const normalizado = estatus.toLowerCase();
+  if (
+    normalizado.includes("reparación") ||
+    normalizado.includes("mantenimiento")
+  ) {
+    return "EN MANTENIMIENTO / REPARACIÓN";
+  }
+  if (normalizado === "dañado" || normalizado === "danado") return "DAÑADO";
+  if (normalizado === "extraviado" || normalizado === "perdido") {
+    return "EXTRAVIADO";
+  }
+  if (normalizado === "inactivo" || normalizado === "robado") return "INACTIVO";
+  if (normalizado === "activo" || normalizado === "asignado") {
+    return tieneAsignacion ? "ASIGNADO" : "DISPONIBLE";
+  }
+  return "DISPONIBLE";
+}
+
 function TablaInventario({ datosReales, onAsignacionCambiada }) {
   const [empleados, setEmpleados] = useState([]);
   const [procesandoId, setProcesandoId] = useState(null);
@@ -90,6 +132,47 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
       if (onAsignacionCambiada) onAsignacionCambiada();
     } catch (error) {
       alert(`⚠️ Error al registrar reporte: ${error.message}`);
+    } finally {
+      setProcesandoId(null);
+    }
+  };
+
+  const handleActualizarEstatus = async (idActivo, categoria, nuevoEstatus) => {
+    if (nuevoEstatus === "DAR DE BAJA") {
+      const confirmar = window.confirm(
+        `¿Confirmas dar de baja el activo ${idActivo}?\n\nEsta acción desvinculará el equipo del empleado asignado y lo eliminará permanentemente de la base de datos. No se puede deshacer.`,
+      );
+      if (!confirmar) return;
+    }
+
+    setProcesandoId(idActivo);
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/inventario/estatus`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id_activo: idActivo,
+          categoria,
+          nuevo_estatus: nuevoEstatus,
+        }),
+      });
+      const resultado = await response.json();
+      if (!response.ok || resultado.status === "error") {
+        throw new Error(
+          resultado.detail ||
+            resultado.message ||
+            "No se pudo actualizar el estatus.",
+        );
+      }
+
+      if (onAsignacionCambiada) await onAsignacionCambiada();
+      alert(
+        nuevoEstatus === "DAR DE BAJA"
+          ? `✔️ El activo ${idActivo} fue dado de baja.`
+          : `✔️ Estatus de ${idActivo} actualizado a ${nuevoEstatus}.`,
+      );
+    } catch (error) {
+      alert(`⚠️ Error al actualizar el estatus: ${error.message}`);
     } finally {
       setProcesandoId(null);
     }
@@ -216,22 +299,10 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
                 tieneAsignacion = true;
               }
 
-              let colorEstatus = "#991b1b";
-              let bgEstatus = "#fef2f2";
-
-              if (
-                ["activo", "stock", "disponible"].includes(
-                  estatusReal.toLowerCase(),
-                )
-              ) {
-                colorEstatus = "#149925";
-                bgEstatus = "#f0fdf4";
-              } else if (
-                ["inactivo", "robado"].includes(estatusReal.toLowerCase())
-              ) {
-                colorEstatus = "#dc2626";
-                bgEstatus = "#fee2e2";
-              }
+              const estatusSelector = obtenerEstatusSelector(
+                estatusReal,
+                tieneAsignacion,
+              );
 
               return (
                 <tr
@@ -368,21 +439,40 @@ function TablaInventario({ datosReales, onAsignacionCambiada }) {
                       </span>
                     )}
                   </td>
-                  <td style={{ padding: "10px 8px", textAlign: "center" }}>
-                    <span
+                  <td style={{ padding: "6px 8px", textAlign: "center" }}>
+                    <select
+                      aria-label={`Cambiar estatus de ${idActivo}`}
+                      value={estatusSelector}
+                      onChange={(e) =>
+                        handleActualizarEstatus(
+                          idActivo,
+                          categoria,
+                          e.target.value,
+                        )
+                      }
+                      disabled={procesandoId === idActivo}
                       style={{
-                        display: "inline-block",
-                        padding: "2px 8px",
+                        maxWidth: "205px",
+                        padding: "5px 8px",
                         borderRadius: "4px",
                         fontSize: "11px",
                         fontWeight: "700",
-                        backgroundColor: bgEstatus,
-                        color: colorEstatus,
-                        textTransform: "uppercase",
+                        border: "1px solid #cbd5e1",
+                        cursor: procesandoId === idActivo ? "wait" : "pointer",
+                        ...ESTILOS_ESTATUS[estatusSelector],
                       }}
                     >
-                      {estatusReal}
-                    </span>
+                      {OPCIONES_ESTATUS.map((estatus) => (
+                        <option
+                          key={estatus}
+                          value={estatus}
+                          disabled={estatus === "ASIGNADO" && !tieneAsignacion}
+                          style={ESTILOS_ESTATUS[estatus]}
+                        >
+                          {estatus}
+                        </option>
+                      ))}
+                    </select>
                   </td>
                 </tr>
               );

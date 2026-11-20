@@ -87,6 +87,11 @@ class EliminarEquipoRequest(BaseModel):
     id_equipo: str
     categoria: str 
 
+class ActualizarEstatusInventarioRequest(BaseModel):
+    id_activo: str
+    categoria: str
+    nuevo_estatus: str
+
 # ==========================================================================
 # ESQUEMAS PYDANTIC MAESTROS YGO ACTUALIZADOS CON FECHAS Y SECCIÓN TALLER
 # ==========================================================================
@@ -206,7 +211,9 @@ def obtener_equipos(username: str = None, token_sesion: str = None):
                 'N/A' AS ubicacion,
                 C.Precio AS precio
             FROM dbo.Celular C
-            LEFT JOIN dbo.Empleado EMP ON EMP.ID_Celular = C.ID_Celular
+            LEFT JOIN dbo.Empleado EMP
+                ON EMP.ID_Empleado = C.ID_Empleado
+                OR (C.ID_Empleado IS NULL AND EMP.ID_Celular = C.ID_Celular)
             
             UNION ALL
             
@@ -282,6 +289,210 @@ def obtener_equipos(username: str = None, token_sesion: str = None):
     finally:
         if 'cursor' in locals(): cursor.close()
         if 'conn' in locals(): conn.close()
+
+
+@app.get("/api/inventario/completo")
+def obtener_inventario_completo():
+    """Devuelve todas las columnas de cada activo y los datos de su responsable."""
+    consultas = (
+        (
+            "Cómputo",
+            """
+                SELECT A.*,
+                    EMP.ID_Empleado AS Responsable_ID_Empleado,
+                    EMP.Nombre AS Responsable_Nombre,
+                    EMP.Ap_Paterno AS Responsable_Ap_Paterno,
+                    EMP.Ap_Materno AS Responsable_Ap_Materno,
+                    EMP.Cargo AS Responsable_Cargo
+                FROM dbo.Equipo_Computo A
+                LEFT JOIN dbo.Empleado EMP ON A.ID_Empleado = EMP.ID_Empleado
+            """,
+        ),
+        (
+            "Telefonía",
+            """
+                SELECT A.*,
+                    EMP.ID_Empleado AS Responsable_ID_Empleado,
+                    EMP.Nombre AS Responsable_Nombre,
+                    EMP.Ap_Paterno AS Responsable_Ap_Paterno,
+                    EMP.Ap_Materno AS Responsable_Ap_Materno,
+                    EMP.Cargo AS Responsable_Cargo
+                FROM dbo.Celular A
+                LEFT JOIN dbo.Empleado EMP
+                    ON EMP.ID_Empleado = A.ID_Empleado
+                    OR (A.ID_Empleado IS NULL AND EMP.ID_Celular = A.ID_Celular)
+            """,
+        ),
+        (
+            "Flota vehicular",
+            """
+                SELECT A.*,
+                    EMP.ID_Empleado AS Responsable_ID_Empleado,
+                    EMP.Nombre AS Responsable_Nombre,
+                    EMP.Ap_Paterno AS Responsable_Ap_Paterno,
+                    EMP.Ap_Materno AS Responsable_Ap_Materno,
+                    EMP.Cargo AS Responsable_Cargo
+                FROM dbo.Vehiculo A
+                LEFT JOIN dbo.Empleado EMP ON A.ID_Empleado = EMP.ID_Empleado
+            """,
+        ),
+    )
+
+    conn = None
+    cursor = None
+    try:
+        conn = pyodbc.connect(connection_string)
+        cursor = conn.cursor()
+        inventario = []
+
+        for categoria, query in consultas:
+            cursor.execute(query)
+            columnas = [columna[0] for columna in cursor.description]
+            for fila in cursor.fetchall():
+                registro = {"categoria_activo": categoria}
+                registro.update(dict(zip(columnas, fila)))
+                inventario.append(registro)
+
+        return {"status": "success", "data": inventario}
+    except Exception as error:
+        return {"status": "error", "message": str(error)}
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
+
+
+@app.put("/api/inventario/estatus")
+def actualizar_estatus_inventario(request: ActualizarEstatusInventarioRequest):
+    estatus_solicitado = request.nuevo_estatus.strip().upper()
+    id_activo = request.id_activo.strip()
+    categoria = request.categoria.strip().lower()
+    estatus_sql = {
+        "DISPONIBLE": "disponible",
+        "ASIGNADO": "activo",
+        "INACTIVO": "inactivo",
+        "EN MANTENIMIENTO / REPARACIÓN": "en reparación",
+        "DAÑADO": "dañado",
+        "EXTRAVIADO": "extraviado",
+    }
+
+    if not id_activo:
+        raise HTTPException(status_code=400, detail="El ID del activo es obligatorio.")
+    if estatus_solicitado not in estatus_sql and estatus_solicitado != "DAR DE BAJA":
+        raise HTTPException(status_code=400, detail="El estatus solicitado no es válido.")
+
+    if "vehiculo" in categoria or id_activo.startswith("VEH-"):
+        tipo_activo = "vehiculo"
+    elif "celular" in categoria or id_activo.startswith("M"):
+        tipo_activo = "celular"
+    else:
+        tipo_activo = "computo"
+
+    conn = None
+    cursor = None
+    try:
+        conn = pyodbc.connect(connection_string)
+        cursor = conn.cursor()
+
+        consultas_activo = {
+            "vehiculo": "SELECT ID_Empleado FROM dbo.Vehiculo WHERE ID_Vehiculo = ?",
+            "celular": "SELECT ID_Empleado FROM dbo.Celular WHERE ID_Celular = ?",
+            "computo": "SELECT ID_Empleado FROM dbo.Equipo_Computo WHERE ID_Equipo = ?",
+        }
+        fila_activo = cursor.execute(
+            consultas_activo[tipo_activo], (id_activo,)
+        ).fetchone()
+        if fila_activo is None:
+            raise HTTPException(status_code=404, detail="No se encontró el activo solicitado.")
+
+        if estatus_solicitado == "ASIGNADO":
+            if tipo_activo == "celular":
+                fila_asignacion = cursor.execute(
+                    "SELECT TOP 1 ID_Empleado FROM dbo.Empleado WHERE ID_Celular = ?",
+                    (id_activo,),
+                ).fetchone()
+                esta_asignado = (
+                    fila_activo[0] is not None or fila_asignacion is not None
+                )
+            else:
+                esta_asignado = fila_activo[0] is not None
+            if not esta_asignado:
+                raise HTTPException(
+                    status_code=400,
+                    detail="Solo se puede marcar como ASIGNADO un activo vinculado a un empleado.",
+                )
+
+        if estatus_solicitado == "DAR DE BAJA":
+            if tipo_activo == "vehiculo":
+                cursor.execute(
+                    "UPDATE dbo.Empleado SET ID_Vehiculo = NULL WHERE ID_Vehiculo = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "UPDATE dbo.Vehiculo SET ID_Empleado = NULL WHERE ID_Vehiculo = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "DELETE FROM dbo.Vehiculo WHERE ID_Vehiculo = ?", (id_activo,)
+                )
+            elif tipo_activo == "celular":
+                cursor.execute(
+                    "UPDATE dbo.Empleado SET ID_Celular = NULL WHERE ID_Celular = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "UPDATE dbo.Celular SET ID_Empleado = NULL WHERE ID_Celular = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "DELETE FROM dbo.Celular WHERE ID_Celular = ?", (id_activo,)
+                )
+            else:
+                cursor.execute(
+                    "UPDATE dbo.Empleado SET ID_Equipo = NULL WHERE ID_Equipo = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "UPDATE dbo.Equipo_Computo SET ID_Empleado = NULL WHERE ID_Equipo = ?",
+                    (id_activo,),
+                )
+                cursor.execute(
+                    "DELETE FROM dbo.Equipo_Computo WHERE ID_Equipo = ?",
+                    (id_activo,),
+                )
+            mensaje = f"El activo {id_activo} se desvinculó y se eliminó de la base de datos."
+        else:
+            columnas_estatus = {
+                "vehiculo": ("dbo.Vehiculo", "Status_Vehiculo", "ID_Vehiculo"),
+                "celular": ("dbo.Celular", "Status_Inventario", "ID_Celular"),
+                "computo": ("dbo.Equipo_Computo", "Status", "ID_Equipo"),
+            }
+            tabla, columna_estatus, columna_id = columnas_estatus[tipo_activo]
+            cursor.execute(
+                f"UPDATE {tabla} SET {columna_estatus} = ? WHERE {columna_id} = ?",
+                (estatus_sql[estatus_solicitado], id_activo),
+            )
+            mensaje = f"El estatus del activo {id_activo} se actualizó a {estatus_solicitado}."
+
+        conn.commit()
+        return {"status": "success", "message": mensaje}
+    except HTTPException:
+        if conn is not None:
+            conn.rollback()
+        raise
+    except Exception as error:
+        if conn is not None:
+            conn.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"No se pudo actualizar el inventario: {str(error)}",
+        )
+    finally:
+        if cursor is not None:
+            cursor.close()
+        if conn is not None:
+            conn.close()
 
 
 @app.get("/api/empleados-lista")
